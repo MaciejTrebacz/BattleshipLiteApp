@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -50,14 +51,49 @@ namespace BattleshipLiteLibrary
 
         public static bool PlaceShip(PlayerInfoModel model, string location)
         {
-            GridSpotModel spot = new GridSpotModel();
-            spot.SpotLetter = location.Substring(0, 1);
-            int.TryParse(location.Substring(1), out int result);
-            Console.WriteLine(result);
-            spot.SpotNumber = result;
-            spot.Status = GridSpotStatus.Ship;
-            model.ShipLocations.Add(spot);
-            return true;
+            string row = location.Substring(0, 1);
+            int.TryParse(location.Substring(1), out int column);
+           
+            bool isValidLocation = ValidateShipLocation(model, row,column);
+
+            bool isValidGrid = ValidateGridLocation(model, row, column);
+
+            if (isValidLocation && isValidGrid)
+            {
+                GridSpotModel spot = new GridSpotModel();
+                spot.SpotLetter = row;
+                spot.SpotNumber = column;
+                spot.Status = GridSpotStatus.Ship;
+                model.ShipLocations.Add(spot);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool ValidateGridLocation(PlayerInfoModel model, string row, int column)
+        {
+            bool isValidLocation = false;
+            foreach (var ship in model.ShotGrid)
+            {
+                if (row.ToUpper() == ship.SpotLetter && column == ship.SpotNumber)
+                {
+                    isValidLocation = true;
+                }
+            }
+            return isValidLocation;
+
+        }
+
+        private static bool ValidateShipLocation(PlayerInfoModel model, string row,int column)
+        {
+            bool isValidLocation = true;
+            foreach (var ship in model.ShipLocations)
+            {
+                if (row.ToUpper() == ship.SpotLetter && column == ship.SpotNumber)
+                {
+                    isValidLocation = false; break;
+                }
+            } return isValidLocation;
         }
 
         public static bool PlayerStillActive(PlayerInfoModel opponent)
@@ -87,12 +123,16 @@ namespace BattleshipLiteLibrary
 
         public static bool ValidateShot(PlayerInfoModel activePlayer, string row, int column)
         {
-            foreach (var player in activePlayer.ShotGrid)
+            foreach (var spot in activePlayer.ShotGrid)
             {
-                if (row.ToUpper() == player.SpotLetter && column == player.SpotNumber)
+                if (row.ToUpper() == spot.SpotLetter && column == spot.SpotNumber)
                 {
-                    activePlayer.ShotCount++;
-                    return true;
+                    if (spot.Status == GridSpotStatus.Empty)
+                    {
+                        activePlayer.ShotCount++;
+                        return true;
+                    }
+
                 } 
             }
             return false;
@@ -102,8 +142,10 @@ namespace BattleshipLiteLibrary
         {
             foreach (var ship in opponent.ShipLocations)
             {
-                if (row.ToUpper() == ship.SpotLetter && column == ship.SpotNumber && ship.Status == GridSpotStatus.Ship)
+                if (row.ToUpper() == ship.SpotLetter && column == ship.SpotNumber)
                 {
+                    ship.Status = GridSpotStatus.Sunk;
+                    Console.WriteLine($"{opponent.UserName}'s ship {row}{column} SUNK!");
                     return true;
                 }
             } return false;
@@ -111,15 +153,6 @@ namespace BattleshipLiteLibrary
 
         public static void MarkShotResult(PlayerInfoModel activePlayer,PlayerInfoModel opponent, string row, int column, bool isAHit)
         {
-        
-            foreach (var ship in opponent.ShipLocations)
-            {
-                if (row.ToUpper() == ship.SpotLetter && column == ship.SpotNumber && isAHit == true) 
-                {
-                    ship.Status = GridSpotStatus.Sunk;
-                    Console.WriteLine("SUNK IT ");
-                } 
-            }
 
             foreach (var spot in activePlayer.ShotGrid)
             {

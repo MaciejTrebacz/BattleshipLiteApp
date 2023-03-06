@@ -37,7 +37,6 @@ namespace BattleshipLite
                 {
                     // swap positions
                     (activePlayer, opponent) = (opponent, activePlayer);
-
                 }
                 else
                 {
@@ -57,7 +56,7 @@ namespace BattleshipLite
         private static void IdentifyWinner(PlayerInfoModel winner)
         {
             Console.WriteLine($"Congratulation {winner.UserName}");
-            Console.WriteLine($"Player {winner.UserName} took {GameLogic.GetShotCount(winner)}");
+            Console.WriteLine($"Player {winner.UserName} took {GameLogic.GetShotCount(winner)} shots!");
         }
 
         private static void RecordPlayerShot(PlayerInfoModel activePlayer, PlayerInfoModel opponent)
@@ -67,9 +66,8 @@ namespace BattleshipLite
             int column = 0;
             do
             {
-                string shot = AskForShot();
+                string shot = AskForShot(activePlayer);
                 (row, column) = GameLogic.SplitshotIntoRowAndColumn(shot);
-                Console.WriteLine(row,column);
                 isValidShot = GameLogic.ValidateShot(activePlayer,row, column);
 
                 if (isValidShot == false)
@@ -87,9 +85,10 @@ namespace BattleshipLite
 
         }
 
-        private static string AskForShot()
+        private static string AskForShot(PlayerInfoModel player)
         {
-            Console.Write("Please enter your shot: ");
+            Console.WriteLine($"You fired already {player.ShotCount} times!");
+            Console.Write($"Please {player.UserName} enter your shot: ");
             string output = Console.ReadLine();
             return output;
         }
@@ -110,10 +109,10 @@ namespace BattleshipLite
                     Console.Write($" {gridSpot.SpotLetter}{gridSpot.SpotNumber} ");
                 }else if (gridSpot.Status == GridSpotStatus.Hit)
                 {
-                    Console.Write(" X ");
+                    Console.Write(" X  ");
                 } else if (gridSpot.Status == GridSpotStatus.Miss)
                 {
-                    Console.Write(" O ");
+                    Console.Write(" O  ");
                 }
                 else
                 {
@@ -156,7 +155,7 @@ namespace BattleshipLite
         {
             do
             {
-                Console.Write($"Place your ship number {model.ShipLocations.Count +1}: ");
+                Console.Write($"Please {model.UserName} place your ship number {model.ShipLocations.Count +1}: ");
                 string location = Console.ReadLine();
 
                 bool isValidLocation = GameLogic.PlaceShip(model,location);
